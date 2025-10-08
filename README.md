@@ -40,7 +40,7 @@ A modern development environment setup tool built with Rust that prioritizes **r
 ### 1. Build the Binary
 
 ```bash
-git clone https://github.com/yourusername/devstrap
+git clone https://github.com/jkaraskiewicz/devstrap
 cd devstrap
 cargo build --release
 ```
@@ -90,7 +90,7 @@ That's it! devstrap knows how to install each package on your system.
 
 ```bash
 # Clone and build
-git clone https://github.com/yourusername/devstrap
+git clone https://github.com/jkaraskiewicz/devstrap
 cd devstrap
 cargo build --release
 
