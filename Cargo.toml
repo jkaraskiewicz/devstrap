@@ -1,0 +1,76 @@
+[package]
+name = "devstrap"
+version = "2.0.0"
+edition = "2021"
+authors = ["devstrap contributors"]
+description = "Universal development environment bootstrapper"
+license = "MIT"
+repository = "https://github.com/devstrap/devstrap"
+readme = "README.md"
+rust-version = "1.75"
+
+[[bin]]
+name = "devstrap"
+path = "src/main.rs"
+
+[dependencies]
+# Serialization and config parsing
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+
+# CLI and terminal
+clap = { version = "4.5", features = ["derive", "cargo"] }
+colored = "2.1"
+indicatif = "0.17"
+
+# Async runtime
+tokio = { version = "1.40", features = ["full"] }
+
+# Lazy static initialization
+once_cell = "1.20"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# System utilities
+which = "6.0"
+shellexpand = "3.1"
+home = "0.5"
+
+# Process execution
+subprocess = "0.2"
+
+# HTTP client for GitHub releases
+reqwest = { version = "0.12.23", features = ["json", "blocking"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tempfile = "3.10"
+assert_cmd = "2.0"
+predicates = "3.1"
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable Link Time Optimization
+codegen-units = 1   # Reduce number of codegen units to improve optimization
+strip = true        # Strip symbols from binary
+panic = "abort"     # Abort on panic to reduce binary size
+
+[lints.clippy]
+# Enable pedantic rules for strict code quality (PROGRAMMING_V2.md requirement)
+pedantic = { level = "deny", priority = -1 }
+# Enforce line limits (functions ≤50, impl blocks ≤200)
+too_many_lines = "warn"
+missing_errors_doc = "allow"        # Error context is in code, not always in docs
+missing_panics_doc = "allow"        # Most functions don't panic
+
+[lints.rust]
+# PROGRAMMING_V2.md requires rust linting configuration
+unsafe_code = "deny"
+missing_docs = { level = "warn", priority = -1 }
+future_incompatible = { level = "deny", priority = -2 }

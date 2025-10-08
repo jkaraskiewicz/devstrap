@@ -1,0 +1,7 @@
+# Minimal test configuration for devstrap
+# Safe for testing in Docker containers
+
+[packages]
+# Simple test groups
+base = ["git", "curl"]
+test_tools = ["bat", "ripgrep"]

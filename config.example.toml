@@ -1,0 +1,67 @@
+# devstrap configuration example
+# This file demonstrates all available configuration options
+
+# Package installation groups
+# Groups are installed sequentially in the order defined
+[packages]
+base = [
+    "git",
+    "curl",
+    "wget",
+    "zsh",
+    "tmux",
+    "neovim"
+]
+
+dev_tools = [
+    "ripgrep",
+    "fzf",
+    "fd",
+    "bat",
+    "exa",
+    "delta"
+]
+
+# Runtime and language version management
+# Supports version shortcuts: "latest", "lts", "stable", "nightly"
+[runtimes]
+# Simple version strings
+python = "latest"           # Latest Python version
+node = "lts"                # Latest LTS Node.js
+rust = "stable"             # Rust stable channel
+go = "latest"               # Latest Go version
+ruby = "3.2.0"              # Specific Ruby version
+
+# Detailed configuration with multiple versions
+[runtimes.java]
+versions = ["17", "21"]     # Install both Java 17 and 21
+default = "21"              # Use Java 21 as default
+manager = "sdkman"          # Use SDKMAN for management
+
+[runtimes.kotlin]
+version = "latest"
+manager = "sdkman"
+
+# TypeScript (installed via npm, requires node)
+[runtimes.typescript]
+version = "latest"
+requires = "node"
+
+# System-provided compilers and languages
+# These will be installed via the system package manager (apt/brew/dnf/pacman)
+[system_languages]
+c = true
+cpp = true
+clang = true
+
+# Framework configurations
+[frameworks]
+angular = "latest"          # Latest Angular CLI
+
+[frameworks.android]
+sdk = "latest"
+build-tools = "34.0.0"
+
+# Special installation configurations for GitHub releases
+[special_installs]
+lazygit = "https://github.com/jesseduffield/lazygit/releases/latest"

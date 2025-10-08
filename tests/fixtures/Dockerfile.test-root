@@ -1,0 +1,59 @@
+# Test Dockerfile with root user
+# For testing sudo apt installations
+
+FROM ubuntu:22.04
+
+# Install dependencies as root
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    sudo \
+    zsh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust as root
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Set working directory
+WORKDIR /root/devstrap
+
+# Copy the devstrap project
+COPY . /root/devstrap
+
+# Build devstrap
+RUN cargo build --release
+
+# Create test config
+RUN cat > /root/devstrap/test-config.toml << 'EOF'
+# Test configuration for root user
+[packages]
+git = { name = "git" }
+ripgrep = { name = "ripgrep" }
+bat = { name = "bat" }
+
+[configs]
+
+[dotfiles]
+files = []
+
+[zsh]
+framework = ""
+prezto_repo = ""
+
+[install_groups]
+base = ["git"]
+dev_tools = ["ripgrep", "bat"]
+
+[base_packages]
+apt = ["git", "curl", "build-essential"]
+
+[language_managers]
+install_nvm = false
+install_pyenv = false
+install_rbenv = false
+EOF
+
+CMD ["/bin/bash"]

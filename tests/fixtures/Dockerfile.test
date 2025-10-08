@@ -1,0 +1,59 @@
+# Test Dockerfile for devstrap
+# Ubuntu-based container for safe testing
+
+FROM ubuntu:22.04
+
+# Install basic dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    sudo \
+    zsh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a test user with sudo privileges
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Switch to test user
+USER testuser
+WORKDIR /home/testuser
+
+# Install Rust for the test user
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/home/testuser/.cargo/bin:${PATH}"
+
+# Copy the devstrap project
+COPY --chown=testuser:testuser . /home/testuser/devstrap
+WORKDIR /home/testuser/devstrap
+
+# Build devstrap
+RUN cargo build --release
+
+# Create a minimal test config
+RUN mkdir -p /home/testuser/devstrap/test && \
+    cat > /home/testuser/devstrap/test/config.toml << 'EOF'
+[packages.base]
+git = { available_methods = ["system"] }
+curl = { available_methods = ["system"] }
+
+[packages.dev_tools]
+ripgrep = { available_methods = ["system", "cargo"], package_name = "ripgrep" }
+
+[dotfiles]
+files = []
+
+[zsh]
+framework = ""
+prezto_repo = ""
+
+[language_managers]
+install_nvm = false
+install_pyenv = false
+install_rbenv = false
+EOF
+
+CMD ["/bin/bash"]
