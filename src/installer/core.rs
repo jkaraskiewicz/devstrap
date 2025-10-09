@@ -73,12 +73,68 @@ impl Installer {
         Ok(())
     }
 
+    /// Update packages from a specific group to latest versions
+    pub fn update_group(&self, group_name: &str) -> Result<()> {
+        let package_ids = self.config.get_group_packages(group_name);
+
+        if package_ids.is_empty() {
+            return Ok(());
+        }
+
+        println!(
+            "
+{} {}",
+            "Updating group:".bold().cyan(),
+            group_name.bold()
+        );
+
+        let packages = prepare_packages(&package_ids, &self.system_info);
+        let results = self.update_packages(&packages);
+        let errors = Self::collect_errors(results, &packages);
+
+        report_errors(errors);
+
+        Ok(())
+    }
+
+    /// Update a specific package to latest version
+    pub fn update_package(&self, package_id: &str) -> Result<()> {
+        println!("  {} Updating {}...", "↻".cyan(), package_id.bold());
+
+        let packages = prepare_packages(&[package_id.to_string()], &self.system_info);
+
+        if packages.is_empty() {
+            return Err(anyhow::anyhow!("Package {} not found", package_id));
+        }
+
+        let results = self.update_packages(&packages);
+        let errors = Self::collect_errors(results, &packages);
+
+        report_errors(errors);
+
+        Ok(())
+    }
+
     /// Install multiple packages sequentially
     fn install_packages(&self, packages: &[Package]) -> Vec<Result<()>> {
         packages
             .iter()
             .map(|package| {
                 package_install::install_package(
+                    package,
+                    self.system_info.default_package_manager,
+                    self.dry_run,
+                )
+            })
+            .collect()
+    }
+
+    /// Update multiple packages sequentially
+    fn update_packages(&self, packages: &[Package]) -> Vec<Result<()>> {
+        packages
+            .iter()
+            .map(|package| {
+                package_install::update_package(
                     package,
                     self.system_info.default_package_manager,
                     self.dry_run,

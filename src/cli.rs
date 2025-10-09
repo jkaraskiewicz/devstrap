@@ -2,7 +2,7 @@
 //!
 //! Defines the command-line interface structure and argument parsing logic.
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 /// Universal development environment bootstrapper
@@ -13,25 +13,38 @@ use std::path::PathBuf;
     about = "Universal development environment bootstrapper",
     long_about = None
 )]
-#[allow(clippy::struct_excessive_bools)]
 pub struct Cli {
     /// Path to config.toml file
-    #[arg(short, long, default_value = "config.toml")]
+    #[arg(short, long, default_value = "config.toml", global = true)]
     pub config: PathBuf,
 
     /// Dry run - show what would be done without making changes
-    #[arg(long)]
+    #[arg(long, global = true)]
     pub dry_run: bool,
 
-    /// List all available packages and exit
-    #[arg(long)]
-    pub list_packages: bool,
-
     /// Verbose output
-    #[arg(short, long)]
+    #[arg(short, long, global = true)]
     pub verbose: bool,
 
     /// Skip confirmation prompts (for CI/automated environments)
-    #[arg(short, long)]
+    #[arg(short, long, global = true)]
     pub yes: bool,
+
+    #[command(subcommand)]
+    pub command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum Commands {
+    /// Install packages and runtimes (default behavior)
+    Install,
+
+    /// Update installed packages and runtimes to latest versions
+    Update {
+        /// Optional: Specific package or runtime to update
+        target: Option<String>,
+    },
+
+    /// List all available packages
+    List,
 }

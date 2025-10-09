@@ -68,7 +68,7 @@ That's it! devstrap knows how to install each package on your system.
 
 ```bash
 # List all supported packages
-./target/release/devstrap --list-packages
+./target/release/devstrap list
 ```
 
 ### 4. Run devstrap
@@ -113,8 +113,9 @@ cargo install --path .
 ### Basic Commands
 
 ```bash
-# Full installation
+# Full installation (default command)
 devstrap
+devstrap install
 
 # Preview changes (dry-run)
 devstrap --dry-run
@@ -122,20 +123,72 @@ devstrap --dry-run
 # Auto-confirm for CI/automation
 devstrap --yes
 
+# Update all packages and runtimes
+devstrap update
+
+# Update specific package or runtime
+devstrap update ripgrep
+
 # List all available packages
-devstrap --list-packages
+devstrap list
 
 # Use custom config file
 devstrap --config /path/to/config.toml
 ```
 
+### Update Commands
+
+Keep your development environment up-to-date with the latest package and runtime versions:
+
+```bash
+# Update all packages and runtimes to latest versions
+devstrap update
+
+# Update a specific package
+devstrap update ripgrep
+
+# Update a specific runtime
+devstrap update node
+
+# Preview update changes (dry-run)
+devstrap update --dry-run
+
+# Auto-confirm updates for CI
+devstrap update --yes
+```
+
+**How Updates Work:**
+
+- **Packages**: Uses the same installation method to upgrade to the latest version available from the package manager
+- **Runtimes**: Clears the version lockfile and re-resolves to the latest versions based on your config.toml (e.g., "latest", "lts", "stable")
+- **Lockfile**: After updating runtimes, devstrap.lock is regenerated with the new resolved versions
+
+**Update Best Practices:**
+
+```bash
+# Always preview updates first
+devstrap update --dry-run
+
+# Review what will change, then run
+devstrap update
+
+# Update specific tools when needed
+devstrap update fzf
+devstrap update python
+```
+
 ### CLI Options
 
 ```
-Options:
+Commands:
+  install              Install packages and runtimes (default behavior)
+  update [TARGET]      Update installed packages and runtimes to latest versions
+  list                 List all available packages
+  help                 Print help message
+
+Global Options:
   -c, --config <CONFIG>  Path to config.toml file [default: config.toml]
       --dry-run          Dry run - show what would be done without making changes
-      --list-packages    List all available packages and exit
   -v, --verbose          Verbose output
   -y, --yes              Skip confirmation prompts (for CI/automated environments)
   -h, --help             Print help
@@ -154,7 +207,11 @@ devstrap --dry-run
 devstrap --verbose
 
 # Discover available packages
-devstrap --list-packages
+devstrap list
+
+# Update to latest versions
+devstrap update --dry-run  # Preview first
+devstrap update            # Then update
 ```
 
 #### CI/Automation
@@ -163,8 +220,14 @@ devstrap --list-packages
 # Non-interactive installation
 devstrap --yes
 
+# Non-interactive updates
+devstrap update --yes
+
 # Use different config for CI
 devstrap --config ci-config.toml --yes
+
+# Update with custom config in CI
+devstrap update --config ci-config.toml --yes
 ```
 
 #### Selective Installation
@@ -203,7 +266,7 @@ my_awesome_tools = ["tmux", "htop", "jq"]
 See all available packages:
 
 ```bash
-devstrap --list-packages
+devstrap list
 ```
 
 This shows all built-in packages that devstrap knows how to install.

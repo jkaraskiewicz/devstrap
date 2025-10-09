@@ -67,6 +67,57 @@ pub(super) fn install_package(
     execute_installation(&package_name, package)
 }
 
+/// Update a single package to latest version
+pub(super) fn update_package(
+    package: &Package,
+    _default_pm: Option<crate::detect::PackageManager>,
+    dry_run: bool,
+) -> Result<()> {
+    let package_name = package.package_name().unwrap_or_else(|| package.id.clone());
+
+    println!("  {} {}", "↻".cyan(), package_name.bold());
+
+    if dry_run {
+        println!(
+            "    {} Would update {} to latest version",
+            "[DRY-RUN]".yellow(),
+            package_name
+        );
+        return Ok(());
+    }
+
+    execute_update(&package_name, package)
+}
+
+/// Execute the actual package update
+fn execute_update(package_name: &str, package: &Package) -> Result<()> {
+    println!(
+        "    Updating {} via {}...",
+        package_name,
+        package.preferred_method.display_name()
+    );
+
+    match dispatch_installation(package_name, &package.preferred_method, package) {
+        Ok(()) => {
+            println!(
+                "    {} Successfully updated {}",
+                "✓".green(),
+                package_name
+            );
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!(
+                "    {} Failed to update {}: {}",
+                "✗".red(),
+                package_name,
+                e
+            );
+            Err(e)
+        }
+    }
+}
+
 /// Execute the actual installation
 fn execute_installation(package_name: &str, package: &Package) -> Result<()> {
     println!(
