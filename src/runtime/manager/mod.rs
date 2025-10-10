@@ -10,7 +10,7 @@ mod system_lang;
 mod version_resolution;
 
 use super::resolver::VersionResolver;
-use crate::config::{Config, FrameworkSpec, Lockfile, RuntimeSpec};
+use crate::config::{Config, Lockfile, RuntimeSpec};
 use crate::error::Result;
 use colored::Colorize;
 use std::path::Path;
@@ -46,9 +46,7 @@ impl RuntimeManager {
             self.install_runtime(name, spec)?;
         }
 
-        for (name, spec) in &self.config.frameworks.clone() {
-            self.install_framework(name, spec)?;
-        }
+
 
         Ok(())
     }
@@ -106,27 +104,7 @@ impl RuntimeManager {
         Ok(())
     }
 
-    /// Install a framework
-    fn install_framework(&mut self, name: &str, spec: &FrameworkSpec) -> Result<()> {
-        println!(
-            "\n{} {}",
-            "Installing framework:".bold().cyan(),
-            name.bold()
-        );
 
-        let version = spec.get_version();
-        let resolved =
-            VersionResolver::resolve(name, &version, None).unwrap_or_else(|_| version.clone());
-
-        self.lockfile
-            .set_framework(name.to_string(), version.clone(), resolved.clone());
-
-        println!("  {} version {}", "↓".cyan(), resolved.green());
-
-        framework_install::install_framework(name, &resolved, self.dry_run)?;
-
-        Ok(())
-    }
 
     /// Save the lockfile
     pub fn save_lockfile<P: AsRef<Path>>(&self, path: P) -> Result<()> {

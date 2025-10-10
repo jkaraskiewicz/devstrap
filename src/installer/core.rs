@@ -29,29 +29,33 @@ impl Installer {
         }
     }
 
-    /// Install all packages defined in `install_groups` sequentially
+    /// Install all packages sequentially by group
     ///
     /// Groups are processed sequentially, and packages within each group
     /// are also installed sequentially to avoid lock file conflicts.
     pub fn install_all(&self) -> Result<()> {
-        let groups = self.config.get_install_groups();
+        let groups = self.config.get_package_groups();
 
-        for group_name in groups {
-            self.install_group(&group_name)?;
+        for (idx, _group) in groups.iter().enumerate() {
+            self.install_group_by_index(idx)?;
         }
 
         Ok(())
     }
 
-    /// Install packages from a specific group
+    /// Install packages from a specific group by index
     ///
     /// # Arguments
-    /// * `group_name` - Name of the installation group
+    /// * `group_idx` - Index of the group in the packages array
     ///
     /// # Returns
     /// Result indicating success or failure
-    pub fn install_group(&self, group_name: &str) -> Result<()> {
-        let package_ids = self.config.get_group_packages(group_name);
+    fn install_group_by_index(&self, group_idx: usize) -> Result<()> {
+        let groups = self.config.get_package_groups();
+        let package_ids = match groups.get(group_idx) {
+            Some(group) => group,
+            None => return Ok(()),
+        };
 
         if package_ids.is_empty() {
             return Ok(());
@@ -61,10 +65,10 @@ impl Installer {
             "
 {} {}",
             "Installing group:".bold().cyan(),
-            group_name.bold()
+            format!("#{}", group_idx + 1).bold()
         );
 
-        let packages = prepare_packages(&package_ids, &self.system_info);
+        let packages = prepare_packages(package_ids, &self.system_info);
         let results = self.install_packages(&packages);
         let errors = Self::collect_errors(results, &packages);
 
@@ -73,47 +77,7 @@ impl Installer {
         Ok(())
     }
 
-    /// Update packages from a specific group to latest versions
-    pub fn update_group(&self, group_name: &str) -> Result<()> {
-        let package_ids = self.config.get_group_packages(group_name);
 
-        if package_ids.is_empty() {
-            return Ok(());
-        }
-
-        println!(
-            "
-{} {}",
-            "Updating group:".bold().cyan(),
-            group_name.bold()
-        );
-
-        let packages = prepare_packages(&package_ids, &self.system_info);
-        let results = self.update_packages(&packages);
-        let errors = Self::collect_errors(results, &packages);
-
-        report_errors(errors);
-
-        Ok(())
-    }
-
-    /// Update a specific package to latest version
-    pub fn update_package(&self, package_id: &str) -> Result<()> {
-        println!("  {} Updating {}...", "↻".cyan(), package_id.bold());
-
-        let packages = prepare_packages(&[package_id.to_string()], &self.system_info);
-
-        if packages.is_empty() {
-            return Err(anyhow::anyhow!("Package {} not found", package_id));
-        }
-
-        let results = self.update_packages(&packages);
-        let errors = Self::collect_errors(results, &packages);
-
-        report_errors(errors);
-
-        Ok(())
-    }
 
     /// Install multiple packages sequentially
     fn install_packages(&self, packages: &[Package]) -> Vec<Result<()>> {
@@ -129,19 +93,7 @@ impl Installer {
             .collect()
     }
 
-    /// Update multiple packages sequentially
-    fn update_packages(&self, packages: &[Package]) -> Vec<Result<()>> {
-        packages
-            .iter()
-            .map(|package| {
-                package_install::update_package(
-                    package,
-                    self.system_info.default_package_manager,
-                    self.dry_run,
-                )
-            })
-            .collect()
-    }
+
 
     /// Collect installation errors from results
     fn collect_errors(
@@ -174,10 +126,10 @@ mod tests {
         };
 
         let config = crate::config::Config {
-            packages: std::collections::HashMap::new(),
+            packages: vec![],
+            package_versions: std::collections::HashMap::new(),
             special_installs: std::collections::HashMap::new(),
             runtimes: std::collections::HashMap::new(),
-            frameworks: std::collections::HashMap::new(),
             system_languages: std::collections::HashMap::new(),
         };
 

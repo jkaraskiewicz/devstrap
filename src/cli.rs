@@ -36,13 +36,15 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Install packages and runtimes (default behavior)
-    Install,
+    /// Synchronize system with config (default behavior)
+    Sync {
+        /// Remove packages not in config (use with caution)
+        #[arg(long)]
+        prune: bool,
 
-    /// Update installed packages and runtimes to latest versions
-    Update {
-        /// Optional: Specific package or runtime to update
-        target: Option<String>,
+        /// Update lockfile to actual latest versions
+        #[arg(long)]
+        refresh: bool,
     },
 
     /// List all available packages

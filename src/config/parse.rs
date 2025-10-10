@@ -23,14 +23,14 @@ impl Config {
         Ok(config)
     }
 
-    /// Validate that all packages in groups are available in builtin packages
-    fn validate_group_packages(&self) -> Result<()> {
-        for (group_name, packages) in &self.packages {
-            for package_id in packages {
+    /// Validate that all packages are available in builtin packages
+    fn validate_packages(&self) -> Result<()> {
+        for (group_idx, group) in self.packages.iter().enumerate() {
+            for package_id in group {
                 if builtin::get_package(package_id).is_none() {
                     return Err(anyhow!(
-                        "Package '{package_id}' in group '{group_name}' is not a supported package. \
-                         Run 'devstrap --list-packages' to see available packages."
+                        "Package '{package_id}' in group {group_idx} is not a supported package. \
+                         Run 'devstrap list' to see available packages."
                     ));
                 }
             }
@@ -42,7 +42,7 @@ impl Config {
     ///
     /// Ensures all package references are valid builtin packages.
     pub fn validate(&self) -> Result<()> {
-        self.validate_group_packages()?;
+        self.validate_packages()?;
         Ok(())
     }
 
