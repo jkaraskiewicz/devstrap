@@ -1,6 +1,6 @@
 //! Package installation helpers
 
-use super::helpers::{dispatch_installation, print_package_status};
+use super::package_orchestration::{dispatch_installation, print_package_status};
 use crate::error::Result;
 use crate::package::{InstallMethod, Package};
 use crate::utils::uninstall_package;

@@ -85,13 +85,28 @@ where
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
     /// Packages to install - supports both flat and nested arrays
-    /// Flat: packages = ["git", "curl", "ripgrep"]
-    /// Nested: packages = [["git", "curl"], ["ripgrep", "bat"]]
+    ///
+    /// # Examples
+    ///
+    /// ```toml
+    /// # Flat array
+    /// packages = ["git", "curl", "ripgrep"]
+    ///
+    /// # Nested array for installation ordering
+    /// packages = [["git", "curl"], ["ripgrep", "bat"]]
+    /// ```
     #[serde(default, deserialize_with = "deserialize_packages")]
     pub packages: Vec<Vec<String>>,
 
     /// Optional: Pin specific package versions
-    /// Example: git = "2.43.0", neovim = "0.9.5"
+    ///
+    /// # Example
+    ///
+    /// ```toml
+    /// [package_versions]
+    /// git = "2.43.0"
+    /// neovim = "0.9.5"
+    /// ```
     #[serde(default)]
     pub package_versions: HashMap<String, String>,
 

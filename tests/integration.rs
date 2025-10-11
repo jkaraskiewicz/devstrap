@@ -30,9 +30,7 @@ fn test_system_detection() {
 #[test]
 fn test_config_parsing() {
     let config_content = r#"
-[packages]
-base = ["ripgrep", "bat"]
-dev_tools = ["fzf"]
+packages = ["ripgrep", "bat", "fzf"]
     "#;
 
     let temp_dir = tempdir().unwrap();
@@ -41,21 +39,17 @@ dev_tools = ["fzf"]
 
     let config = Config::from_file(&config_path).expect("Failed to parse config");
 
-    assert_eq!(config.packages.len(), 2);
-    assert!(config.packages.contains_key("base"));
-    assert!(config.packages.contains_key("dev_tools"));
-
-    let base_packages = config.get_group_packages("base");
-    assert_eq!(base_packages.len(), 2);
-    assert!(base_packages.contains(&"ripgrep".to_string()));
-    assert!(base_packages.contains(&"bat".to_string()));
+    let all_packages = config.get_all_packages();
+    assert_eq!(all_packages.len(), 3);
+    assert!(all_packages.contains(&"ripgrep".to_string()));
+    assert!(all_packages.contains(&"bat".to_string()));
+    assert!(all_packages.contains(&"fzf".to_string()));
 }
 
 #[test]
 fn test_config_validation_missing_package() {
     let config_content = r#"
-[packages]
-base = ["ripgrep", "missing_package_that_doesnt_exist"]
+packages = ["ripgrep", "missing_package_that_doesnt_exist"]
     "#;
 
     let temp_dir = tempdir().unwrap();
@@ -75,8 +69,7 @@ base = ["ripgrep", "missing_package_that_doesnt_exist"]
 #[test]
 fn test_dry_run_installation() {
     let config_content = r#"
-[packages]
-test_group = ["ripgrep", "bat"]
+packages = ["ripgrep", "bat"]
     "#;
 
     let temp_dir = tempdir().unwrap();
@@ -90,7 +83,7 @@ test_group = ["ripgrep", "bat"]
     let installer = Installer::new(config, system_info, true);
 
     // Should not error in dry-run mode
-    let result = installer.install_group("test_group");
+    let result = installer.install_all();
     assert!(result.is_ok());
 }
 

@@ -1,4 +1,4 @@
-//! Builder methods for PackageConfig
+//! Builder methods for `PackageConfig`
 
 use super::package::PackageConfig;
 

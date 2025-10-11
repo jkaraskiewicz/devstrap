@@ -1,5 +1,8 @@
 # Clippy configuration for devstrap
-# Per PROGRAMMING_V2.md: Functions ≤50 lines, files ≤150 lines (with exceptions)
+# Per PROGRAMMING.md: Functions ≤50 lines, files ≤150 lines (with exceptions)
 
-# Maximum lines for functions/methods (PROGRAMMING_V2.md: ≤50)
+# Maximum lines for functions/methods (PROGRAMMING.md: ≤50)
 too-many-lines-threshold = 50
+
+# Cognitive complexity limit (PROGRAMMING.md: max 5 decision points)
+cognitive-complexity-threshold = 5

@@ -4,7 +4,7 @@
 //! using the appropriate version managers (mise, rustup, sdkman, etc.)
 
 mod framework_install;
-mod manager_helpers;
+mod version_manager_setup;
 mod runtime_install;
 mod system_lang;
 mod version_resolution;
@@ -53,12 +53,12 @@ impl RuntimeManager {
 
     /// Ensure required version managers are installed
     fn ensure_managers(&self) -> Result<()> {
-        let managers_needed = manager_helpers::get_required_managers(&self.config.runtimes);
+        let managers_needed = version_manager_setup::get_required_managers(&self.config.runtimes);
 
         for manager in managers_needed {
-            if !manager_helpers::is_manager_installed(&manager) {
+            if !version_manager_setup::is_manager_installed(&manager) {
                 println!("  {} Installing {} manager...", "↓".cyan(), manager);
-                manager_helpers::install_manager(&manager, self.dry_run)?;
+                version_manager_setup::install_manager(&manager, self.dry_run)?;
             }
         }
 

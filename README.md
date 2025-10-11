@@ -1,13 +1,13 @@
 # devstrap 🦀
 
-**Production-grade Rust development environment bootstrapper** - Universal, reliable, and type-safe
+**Universal development environment bootstrapper** - Universal, reliable, and type-safe
 
 [![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Why devstrap?
 
-A modern development environment setup tool built with Rust that prioritizes **reliability** and **ease of use**:
+A modern, declarative development environment setup tool that prioritizes **reliability** and **ease of use**:
 
 - **Type Safety**: Compile-time guarantees prevent runtime errors
 - **Memory Safety**: No null pointer dereferences or memory leaks
@@ -18,16 +18,18 @@ A modern development environment setup tool built with Rust that prioritizes **r
 
 ## ✨ Features
 
+- 🔄 **Declarative sync model** - Config as single source of truth
 - 🎯 **Type-safe configuration** parsing with validation
+- 🗑️ **Safe pruning** - Remove packages not in config (only devstrap-installed)
 - 🔄 **Sequential package installation** (prevents lock conflicts)
 - 🎖️ **Priority-based installation** method selection
 - 📦 **Multiple package managers**: brew, apt, cargo, npm, pipx, pacman, dnf
 - 🚀 **Runtime version management**: Python, Node.js, Java, Kotlin, Rust, Go, Ruby, and more
-- 🎨 **Framework support**: Angular, React, Vue, Android SDK
 - 🔒 **Version lockfile** for reproducible installations
+- 📊 **State tracking** - Know what devstrap installed vs user-installed
 - 🏃 **Dry-run mode** for safe previewing
 - 🖥️ **Cross-platform**: macOS and Linux
-- 📊 **Beautiful CLI** with colored output
+- 💅 **Beautiful CLI** with colored output
 - ✅ **CI/automation support** with `--yes` flag
 
 ## 📋 Requirements
@@ -49,17 +51,21 @@ The optimized binary will be at `target/release/devstrap` (~2-4 MB).
 
 ### 2. Create Your Configuration
 
-Create a `config.toml` file:
+Create a `config.toml` file with a simple flat array:
 
 ```toml
-# List packages you want installed, organized in groups
-# Group names are custom - name them whatever you want!
-# Groups are installed sequentially in the order they appear
+# Simple flat array - packages installed in order
+packages = ["git", "curl", "ripgrep", "bat", "fzf"]
+```
 
-[packages]
-base = ["git", "curl", "wget"]
-dev_tools = ["ripgrep", "bat", "fd", "fzf"]
-editors = ["neovim"]
+**Or** use nested arrays for explicit ordering:
+
+```toml
+# Nested arrays - install first group, then second group
+packages = [
+    ["git", "curl"],           # Install these first
+    ["ripgrep", "bat", "fzf"]  # Then install these
+]
 ```
 
 That's it! devstrap knows how to install each package on your system.
@@ -74,14 +80,20 @@ That's it! devstrap knows how to install each package on your system.
 ### 4. Run devstrap
 
 ```bash
-# Preview what will be installed
+# Preview what will be installed/changed
 ./target/release/devstrap --dry-run
 
-# Install everything
+# Sync your system with the config
 ./target/release/devstrap
 
-# Or install with auto-confirm (for CI)
+# Or sync with auto-confirm (for CI)
 ./target/release/devstrap --yes
+
+# Remove packages not in config
+./target/release/devstrap --prune
+
+# Update lockfile to latest versions
+./target/release/devstrap --refresh
 ```
 
 ## 🔧 Installation
@@ -113,9 +125,9 @@ cargo install --path .
 ### Basic Commands
 
 ```bash
-# Full installation (default command)
+# Sync system with config (default command)
 devstrap
-devstrap install
+devstrap sync
 
 # Preview changes (dry-run)
 devstrap --dry-run
@@ -123,11 +135,14 @@ devstrap --dry-run
 # Auto-confirm for CI/automation
 devstrap --yes
 
-# Update all packages and runtimes
-devstrap update
+# Remove packages not in config
+devstrap sync --prune
 
-# Update specific package or runtime
-devstrap update ripgrep
+# Update lockfile to latest versions
+devstrap sync --refresh
+
+# Combine flags
+devstrap sync --prune --refresh --yes
 
 # List all available packages
 devstrap list
@@ -136,10 +151,39 @@ devstrap list
 devstrap --config /path/to/config.toml
 ```
 
-### Update Commands
+### Sync Model
 
-Keep your development environment up-to-date with the latest package and runtime versions:
+devstrap uses a **declarative sync model** similar to Terraform or Nix. Your `config.toml` is the single source of truth, and devstrap makes your system match it.
 
+**Three Files System:**
+
+1. **config.toml** - What you WANT (desired state)
+2. **devstrap.lock** - Resolved runtime versions (reproducibility)
+3. **devstrap.state** - What devstrap HAS INSTALLED (tracking)
+
+**How Sync Works:**
+
+```bash
+# devstrap calculates the diff:
+# - What needs to be installed (in config but not installed)
+# - What can be removed (installed by devstrap but not in config)
+
+devstrap sync
+```
+
+**Sync Flags:**
+
+```bash
+# --prune: Remove packages not in config
+# Only removes packages that devstrap installed (safe)
+devstrap sync --prune
+
+# --refresh: Update lockfile to latest versions
+# Re-resolves "latest", "lts", "stable" to actual newest versions
+devstrap sync --refresh
+
+# Combine both for a complete refresh
+devstrap sync --prune --refresh
 ```bash
 # Update all packages and runtimes to latest versions
 devstrap update
@@ -181,8 +225,9 @@ devstrap update python
 
 ```
 Commands:
-  install              Install packages and runtimes (default behavior)
-  update [TARGET]      Update installed packages and runtimes to latest versions
+  sync                 Synchronize system with config (default behavior)
+    --prune            Remove packages not in config (use with caution)
+    --refresh          Update lockfile to actual latest versions
   list                 List all available packages
   help                 Print help message
 
@@ -203,63 +248,73 @@ Global Options:
 # Preview changes
 devstrap --dry-run
 
-# Install with verbose output for debugging
+# Sync with verbose output for debugging
 devstrap --verbose
 
 # Discover available packages
 devstrap list
 
-# Update to latest versions
-devstrap update --dry-run  # Preview first
-devstrap update            # Then update
+# Refresh to latest versions
+devstrap sync --refresh --dry-run  # Preview first
+devstrap sync --refresh            # Then update lockfile
 ```
 
 #### CI/Automation
 
 ```bash
-# Non-interactive installation
+# Non-interactive sync
 devstrap --yes
 
-# Non-interactive updates
-devstrap update --yes
+# Sync with pruning in CI
+devstrap sync --prune --yes
 
 # Use different config for CI
 devstrap --config ci-config.toml --yes
 
-# Update with custom config in CI
-devstrap update --config ci-config.toml --yes
+# Full refresh in CI
+devstrap sync --refresh --config ci-config.toml --yes
 ```
 
-#### Selective Installation
+#### Managing Packages
 
-Simply comment out groups in your `config.toml`:
+```bash
+# Add packages: Edit config.toml and add them to the array
+packages = ["git", "curl", "ripgrep", "bat", "NEW_PACKAGE"]
 
-```toml
-[packages]
-base = ["git", "ripgrep", "bat"]
-# editors = ["neovim", "vim"]  # Skip editors
-dev_tools = ["fzf", "fd"]
+# Then sync
+devstrap sync
+
+# Remove packages: Delete from config.toml, then prune
+packages = ["git", "curl"]  # removed ripgrep and bat
+
+devstrap sync --prune
 ```
 
 ## 📝 Configuration Guide
 
-### Package Groups
+### Package Configuration
 
-Your config file only needs one section: `[packages]`.
+Your config file uses a simple `packages` array:
 
-**Group names are completely custom** - name them whatever you want:
-
+**Simple Format (Flat Array):**
 ```toml
-[packages]
-base = ["git", "curl", "wget"]
-dev_tools = ["ripgrep", "bat", "fd", "fzf"]
-editors = ["neovim", "vim"]
-my_awesome_tools = ["tmux", "htop", "jq"]
+# Packages installed in order
+packages = ["git", "curl", "ripgrep", "bat", "fzf"]
 ```
 
-- Groups are installed **sequentially** in the order they appear
-- Packages within each group are also installed sequentially
+**Advanced Format (Nested Arrays):**
+```toml
+# Groups installed sequentially
+# Useful for explicit ordering (e.g., dependencies first)
+packages = [
+    ["git", "curl"],           # Core tools first
+    ["ripgrep", "bat", "fzf"]  # Then search/view tools
+]
+```
+
+- Packages are installed **sequentially** in the order they appear
 - devstrap automatically chooses the best installation method for each package
+- Both formats work identically - use whichever fits your workflow
 
 ### Discovering Packages
 
@@ -310,13 +365,6 @@ devstrap now supports automatic installation and version management for programm
 - **TypeScript** (via npm)
 - **System languages**: C, C++ (gcc, g++, clang)
 
-### Supported Frameworks
-
-- **Angular** (via npm)
-- **React** (create-react-app via npm)
-- **Vue** (Vue CLI via npm)
-- **Android SDK** (coming soon)
-
 ### Version Shortcuts
 
 Instead of specifying exact versions, use these convenient shortcuts:
@@ -365,17 +413,6 @@ cpp = true
 clang = true
 ```
 
-#### Framework Configuration
-
-```toml
-[frameworks]
-angular = "latest"          # Latest Angular CLI
-
-[frameworks.android]
-sdk = "latest"
-build-tools = "34.0.0"
-```
-
 ### Version Lockfile
 
 devstrap creates a `devstrap.lock` file to pin resolved versions:
@@ -399,10 +436,14 @@ This ensures everyone on your team gets the exact same versions.
 ### Complete Configuration Example
 
 ```toml
-# Package installation
-[packages]
-base = ["git", "curl", "wget"]
-dev_tools = ["ripgrep", "bat", "fzf"]
+# Package installation - simple flat array
+packages = ["git", "curl", "ripgrep", "bat", "fzf"]
+
+# Or use nested arrays for explicit ordering
+# packages = [
+#     ["git", "curl"],
+#     ["ripgrep", "bat", "fzf"]
+# ]
 
 # Runtime versions
 [runtimes]
@@ -418,10 +459,6 @@ default = "21"
 [system_languages]
 c = true
 cpp = true
-
-# Frameworks
-[frameworks]
-angular = "latest"
 ```
 
 ## 🏗️ Architecture

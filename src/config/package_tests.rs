@@ -1,4 +1,4 @@
-//! Tests for PackageConfig
+//! Tests for `PackageConfig`
 
 #[cfg(test)]
 mod tests {

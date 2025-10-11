@@ -5,7 +5,7 @@
 //! to avoid conflicts with package manager lock files.
 
 pub mod core;
-pub mod helpers;
+pub mod package_orchestration;
 pub mod methods;
 mod package_install;
 
@@ -36,14 +36,11 @@ mod tests {
     }
 
     fn create_test_config() -> Config {
-        let mut packages = HashMap::new();
-        packages.insert("test_group".to_string(), vec!["ripgrep".to_string()]);
-
         Config {
-            packages,
+            packages: vec![vec!["ripgrep".to_string()]],
+            package_versions: HashMap::new(),
             special_installs: HashMap::new(),
             runtimes: HashMap::new(),
-            frameworks: HashMap::new(),
             system_languages: HashMap::new(),
         }
     }

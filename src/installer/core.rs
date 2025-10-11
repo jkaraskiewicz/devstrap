@@ -2,7 +2,7 @@
 //!
 //! Provides the Installer struct and group-level installation coordination.
 
-use super::helpers::{prepare_packages, report_errors};
+use super::package_orchestration::{prepare_packages, report_errors};
 use super::package_install;
 use crate::config::Config;
 use crate::detect::SystemInfo;
@@ -37,7 +37,7 @@ impl Installer {
         let groups = self.config.get_package_groups();
 
         for (idx, _group) in groups.iter().enumerate() {
-            self.install_group_by_index(idx)?;
+            self.install_group_by_index(idx);
         }
 
         Ok(())
@@ -50,15 +50,14 @@ impl Installer {
     ///
     /// # Returns
     /// Result indicating success or failure
-    fn install_group_by_index(&self, group_idx: usize) -> Result<()> {
+    fn install_group_by_index(&self, group_idx: usize) {
         let groups = self.config.get_package_groups();
-        let package_ids = match groups.get(group_idx) {
-            Some(group) => group,
-            None => return Ok(()),
+        let Some(package_ids) = groups.get(group_idx) else {
+            return;
         };
 
         if package_ids.is_empty() {
-            return Ok(());
+            return;
         }
 
         println!(
@@ -73,8 +72,6 @@ impl Installer {
         let errors = Self::collect_errors(results, &packages);
 
         report_errors(errors);
-
-        Ok(())
     }
 
 

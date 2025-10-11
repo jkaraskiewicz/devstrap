@@ -14,7 +14,7 @@
 //! - Dry-run mode for safety
 
 // Re-export main types
-pub use config::{Config, FrameworkSpec, Lockfile, PackageConfig, RuntimeSpec};
+pub use config::{Config, FrameworkSpec, Lockfile, PackageConfig, RuntimeSpec, StateFile};
 pub use detect::{Arch, Distro, Os, PackageManager, SystemInfo};
 pub use error::Result;
 pub use installer::Installer;
