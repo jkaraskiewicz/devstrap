@@ -3,7 +3,7 @@
 //! Provides the Installer struct and group-level installation coordination.
 
 use super::orchestration::{prepare_packages, report_errors};
-use crate::service::package_manager::installer;
+use crate::service::package_manager::{installer, update_package_manager};
 use crate::domain::Config;
 use crate::domain::SystemInfo;
 use crate::common::error::Result;
@@ -34,6 +34,22 @@ impl Installer {
     /// Groups are processed sequentially, and packages within each group
     /// are also installed sequentially to avoid lock file conflicts.
     pub fn install_all(&self) -> Result<()> {
+        // Update package manager cache before installing packages
+        // Only update if we have a system package manager (not Cargo/npm/pipx)
+        use crate::domain::PackageManager;
+        if let Some(pm) = self.system_info.default_package_manager {
+            if matches!(
+                pm,
+                PackageManager::Apt
+                    | PackageManager::Brew
+                    | PackageManager::Pacman
+                    | PackageManager::Dnf
+                    | PackageManager::Yum
+            ) {
+                update_package_manager(pm, self.dry_run)?;
+            }
+        }
+
         let groups = self.config.get_package_groups();
 
         for (idx, _group) in groups.iter().enumerate() {

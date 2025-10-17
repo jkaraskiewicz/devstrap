@@ -2,12 +2,68 @@
 //!
 //! Contains the individual package installation logic for each supported method.
 
-use crate::domain::PackageManager;
 use crate::common::error::Result;
-use crate::domain::Package;
 use crate::common::run_command;
+use crate::domain::{Package, PackageManager};
 use anyhow::Context;
 use colored::Colorize;
+
+/// Update package manager cache/repositories
+///
+/// Runs the appropriate update command for the given package manager
+/// to ensure we have the latest package information.
+pub fn update_package_manager(pm: PackageManager, dry_run: bool) -> Result<()> {
+    let (cmd, args, description) = match pm {
+        PackageManager::Apt => (
+            "sudo",
+            vec!["apt-get", "update"],
+            "Updating APT package cache",
+        ),
+        PackageManager::Brew => ("brew", vec!["update"], "Updating Homebrew"),
+        PackageManager::Pacman => (
+            "sudo",
+            vec!["pacman", "-Sy"],
+            "Updating Pacman package database",
+        ),
+        PackageManager::Dnf => (
+            "sudo",
+            vec!["dnf", "check-update"],
+            "Updating DNF package metadata",
+        ),
+        PackageManager::Yum => (
+            "sudo",
+            vec!["yum", "check-update"],
+            "Updating YUM package metadata",
+        ),
+        // These don't need system-level updates
+        PackageManager::Cargo | PackageManager::Npm | PackageManager::Pipx => {
+            return Ok(());
+        }
+    };
+
+    if dry_run {
+        println!(
+            "  {} Would run: {} {}",
+            "[DRY-RUN]".yellow(),
+            cmd,
+            args.join(" ")
+        );
+        return Ok(());
+    }
+
+    println!("  {} {}...", "↻".cyan(), description);
+
+    // For DNF/YUM, check-update returns non-zero when updates are available
+    // This is expected behavior, so we handle it specially
+    if matches!(pm, PackageManager::Dnf | PackageManager::Yum) {
+        let _ = run_command(cmd, &args); // Ignore exit code
+        return Ok(());
+    }
+
+    run_command(cmd, &args).with_context(|| format!("Failed to update {}", pm.display_name()))?;
+
+    Ok(())
+}
 
 /// Install a package using system package manager
 pub fn install_with_system_package_manager(

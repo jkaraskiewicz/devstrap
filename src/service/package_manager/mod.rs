@@ -3,4 +3,5 @@
 pub mod installer;
 pub mod methods;
 
-// installer functions and methods are internal to this module
+// Re-export update function for use by installation coordinator
+pub use methods::update_package_manager;
