@@ -14,23 +14,20 @@
 //! - Dry-run mode for safety
 
 // Re-export main types
-pub use config::{Config, FrameworkSpec, Lockfile, PackageConfig, RuntimeSpec, StateFile};
-pub use detect::{Arch, Distro, Os, PackageManager, SystemInfo};
-pub use error::Result;
-pub use installer::Installer;
-pub use package::{InstallMethod, Package};
-pub use ui::*;
+pub use common::Result;
+pub use domain::{
+    Arch, Config, Distro, InstallMethod, Lockfile, Os, Package, PackageConfig, PackageManager,
+    SystemInfo,
+};
+pub use usecase::Installer;
 
 // Module declarations
 pub mod builtin;
+pub mod common;
 pub mod config;
-pub mod detect;
-pub mod error;
-pub mod installer;
-pub mod package;
-pub mod runtime;
-pub mod ui;
-pub mod utils;
+pub mod domain;
+pub mod service;
+pub mod usecase;
 
 /// Initialize tracing subscriber for logging
 pub fn init_logging() {

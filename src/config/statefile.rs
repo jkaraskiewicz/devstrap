@@ -3,7 +3,7 @@
 //! Tracks which packages and runtimes devstrap has installed to enable
 //! safe sync operations with --prune flag.
 
-use crate::package::InstallMethod;
+use crate::domain::InstallMethod;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

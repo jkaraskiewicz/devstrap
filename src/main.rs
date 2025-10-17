@@ -3,12 +3,13 @@
 //! Command-line interface for the devstrap development environment bootstrapper.
 
 mod cli;
-mod commands;
 mod init;
+mod installation;
+mod sync;
 
 use clap::Parser;
 use cli::Cli;
-use commands::{list_packages, run_sync};
+use devstrap::usecase::list_packages;
 use std::process;
 
 fn main() {
@@ -21,11 +22,11 @@ fn main() {
             process::exit(0);
         }
         Some(cli::Commands::Sync { prune, refresh }) => {
-            run_sync(&cli, *prune, *refresh);
+            sync::run_sync(&cli, *prune, *refresh);
         }
         None => {
             // Default behavior: sync
-            run_sync(&cli, false, false);
+            sync::run_sync(&cli, false, false);
         }
     }
 }

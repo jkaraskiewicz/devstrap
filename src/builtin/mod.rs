@@ -6,7 +6,7 @@
 mod base_packages;
 mod packages;
 
-use crate::config::PackageConfig;
+use crate::domain::PackageConfig;
 
 pub use base_packages::BUILTIN_BASE_PACKAGES;
 pub use packages::BUILTIN_PACKAGES;

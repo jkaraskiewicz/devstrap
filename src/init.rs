@@ -4,7 +4,8 @@
 
 use crate::cli::Cli;
 use colored::Colorize;
-use devstrap::{print_system_info, show_banner, Config, SystemInfo};
+use devstrap::common::{print_system_info, show_banner};
+use devstrap::domain::{Config, SystemInfo};
 use std::path::PathBuf;
 use std::process;
 

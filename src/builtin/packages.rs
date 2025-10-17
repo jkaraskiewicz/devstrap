@@ -1,6 +1,6 @@
 //! Package definitions
 
-use crate::config::PackageConfig;
+use crate::domain::PackageConfig;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
