@@ -1,0 +1,18 @@
+# CUJ 1: Fresh Setup Configuration
+# Test: Installing a complete development environment from scratch
+
+packages = [
+    # Core utilities (install first)
+    ["git", "curl"],
+
+    # Development tools
+    ["ripgrep", "fd", "bat"],
+
+    # Build tools
+    ["cmake", "make"]
+]
+
+# No runtimes for initial test (focus on packages)
+[runtimes]
+
+[system_languages]

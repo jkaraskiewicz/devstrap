@@ -32,6 +32,26 @@ A modern, declarative development environment setup tool that prioritizes **reli
 - 💅 **Beautiful CLI** with colored output
 - ✅ **CI/automation support** with `--yes` flag
 
+## 📚 Table of Contents
+
+- [Why devstrap?](#-why-devstrap)
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Tutorial: Common Scenarios](#-tutorial-common-scenarios)
+  - [Setting Up a New Machine](#scenario-1-setting-up-a-new-machine)
+  - [Cleaning Up Unused Packages](#scenario-2-cleaning-up-unused-packages)
+  - [Team Onboarding](#scenario-3-team-onboarding)
+  - [CI/CD Integration](#scenario-4-cicd-integration)
+  - [Safely Previewing Changes](#scenario-5-safely-previewing-changes)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Configuration Guide](#-configuration-guide)
+- [Runtime & Framework Management](#-runtime--framework-management)
+- [Architecture](#-architecture)
+- [Testing](#-testing)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+
 ## 📋 Requirements
 
 - Rust 1.75 or higher (for building from source)
@@ -95,6 +115,212 @@ That's it! devstrap knows how to install each package on your system.
 # Update lockfile to latest versions
 ./target/release/devstrap --refresh
 ```
+
+## 📖 Tutorial: Common Scenarios
+
+New to devstrap? Follow these step-by-step guides for common real-world scenarios:
+
+### Scenario 1: Setting Up a New Machine
+
+You just got a new laptop and need your complete development environment.
+
+**Step 1:** Install devstrap
+```bash
+git clone https://github.com/jkaraskiewicz/devstrap
+cd devstrap
+cargo build --release
+cp target/release/devstrap ~/.local/bin/
+```
+
+**Step 2:** Create your config
+```bash
+cat > ~/config.toml <<EOF
+packages = [
+    ["git", "curl"],
+    ["ripgrep", "fd", "bat", "fzf"],
+    ["cmake", "make"]
+]
+EOF
+```
+
+**Step 3:** Preview and install
+```bash
+# Always preview first!
+devstrap --config ~/config.toml --dry-run
+
+# Install everything
+devstrap --config ~/config.toml --yes
+```
+
+**Result:** All your tools installed and ready to use! ✅
+
+---
+
+### Scenario 2: Cleaning Up Unused Packages
+
+You've been trying different tools and want to remove the ones you don't use anymore.
+
+**Current config:**
+```toml
+packages = [["git", "curl", "ripgrep", "fd", "bat", "fzf", "jq", "htop"]]
+```
+
+**Updated config (removed jq and htop):**
+```toml
+packages = [["git", "curl", "ripgrep", "fd", "bat", "fzf"]]
+```
+
+**Remove unused packages:**
+```bash
+# Preview what will be removed
+devstrap sync --prune --dry-run
+
+# Execute removal
+devstrap sync --prune --yes
+```
+
+**Safety:** `--prune` only removes packages that devstrap installed. Your manually installed packages are never touched! ✅
+
+---
+
+### Scenario 3: Team Onboarding
+
+Your team needs standardized development environments.
+
+**Team lead creates `devstrap-config.toml`:**
+```toml
+# Team Development Environment
+packages = [
+    ["git", "curl"],
+    ["ripgrep", "fd", "fzf"],
+    ["cmake", "make"]
+]
+
+[system_languages]
+c = true
+cpp = true
+```
+
+**New developer setup:**
+```bash
+# Clone project
+git clone https://github.com/company/project
+cd project
+
+# Install devstrap
+curl -sSL https://your-company.com/install-devstrap.sh | bash
+
+# One command setup!
+devstrap --config devstrap-config.toml --yes
+```
+
+**Everyone gets identical environments!** ✅
+
+---
+
+### Scenario 4: CI/CD Integration
+
+Set up devstrap in your GitHub Actions workflow.
+
+```yaml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup environment with devstrap
+        run: |
+          # Install devstrap
+          curl -sSL https://get-devstrap.sh | bash
+
+          # Non-interactive setup
+          devstrap --config .devstrap/ci-config.toml --yes
+
+      - name: Run tests
+        run: make test
+```
+
+**CI benefits:**
+- Reproducible environments ✅
+- Fast with caching ✅
+- Same tools as local development ✅
+
+---
+
+### Scenario 5: Safely Previewing Changes
+
+Before making any changes, use `--dry-run` to see what will happen.
+
+```bash
+# Preview installing new tools
+devstrap --config new-config.toml --dry-run
+
+# Preview removing packages
+devstrap sync --prune --dry-run
+
+# Preview version updates
+devstrap sync --refresh --dry-run
+```
+
+**Sample dry-run output:**
+```
+⚠ DRY RUN MODE - No changes will be made
+
+Sync Plan:
+  ✓ To install:
+    • ripgrep
+    • fd
+
+[DRY-RUN] Would run: sudo apt-get update
+[DRY-RUN] Would install ripgrep
+[DRY-RUN] Would install fd
+```
+
+**Always dry-run first!** ✅
+
+---
+
+### Quick Tips
+
+**Ubuntu/Debian Users:**
+Some packages have different names:
+- `fd` → `fdfind`
+- `bat` → `batcat`
+
+This is normal! The packages install correctly, just use the Ubuntu binary names.
+
+**State File Location:**
+For `--prune` to work, devstrap needs to track installations. The state file is created at:
+- `~/.config/devstrap/devstrap.state` (default)
+- Or in the same directory as your config file
+
+Ensure your config is in a writable location!
+
+**Lockfile for Teams:**
+Commit `devstrap.lock` to version control:
+```bash
+git add devstrap.lock config.toml
+git commit -m "chore: Lock development tool versions"
+```
+
+This ensures everyone gets the same package versions!
+
+---
+
+### Need Help?
+
+- Check the [Troubleshooting](#-troubleshooting) section below for common issues
+- Run `devstrap --verbose` for detailed debugging output
+- Use `devstrap --dry-run` to preview changes safely
+- See [ROADMAP.md](ROADMAP.md) for planned features and future enhancements
+
+---
 
 ## 🔧 Installation
 

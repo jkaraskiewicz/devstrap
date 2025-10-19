@@ -1,0 +1,21 @@
+# CUJ 4: Team Configuration
+# Test: Standardized team environment setup
+
+# Essential tools (required for all developers)
+packages = [
+    # Version control & core
+    ["git", "curl"],
+
+    # Code search & navigation
+    ["ripgrep", "fd", "fzf"],
+
+    # Build tools
+    ["cmake", "make"]
+]
+
+# Standardized versions for team consistency
+[runtimes]
+
+[system_languages]
+c = true
+cpp = true

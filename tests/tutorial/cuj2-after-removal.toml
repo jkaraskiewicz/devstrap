@@ -1,0 +1,12 @@
+# CUJ 2: After Removal Configuration
+# Test: Config after removing jq, htop (fzf intentionally removed from config)
+
+packages = [
+    ["git", "curl"],
+    ["ripgrep", "fd", "bat"],  # Removed: fzf, jq, htop
+    ["cmake"]
+]
+
+[runtimes]
+
+[system_languages]

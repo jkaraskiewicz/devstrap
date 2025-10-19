@@ -1,0 +1,12 @@
+# CUJ 2: Before Removal Configuration
+# Test: Initial setup with extra packages we'll later remove
+
+packages = [
+    ["git", "curl"],
+    ["ripgrep", "fd", "bat", "fzf", "jq", "htop"],  # Using htop instead of tree
+    ["cmake"]
+]
+
+[runtimes]
+
+[system_languages]

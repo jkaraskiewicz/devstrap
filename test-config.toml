@@ -1,0 +1,13 @@
+# Test configuration for Docker testing
+packages = [
+    ["git", "curl"],
+    ["ripgrep", "fd", "bat"]
+]
+
+[package_versions]
+# No specific versions for now
+
+[runtimes]
+# Skip runtimes for initial test
+
+[system_languages]
