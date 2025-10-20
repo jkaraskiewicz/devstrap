@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2025-10-20
+
+### Fixed
+- CLI now requires explicit `sync` command instead of defaulting to sync when no command specified
+- Running `devstrap` without arguments now shows help text (improved UX)
+- Updated all documentation examples to use `devstrap` instead of `./target/release/devstrap`
+
+## [2.0.0] - 2025-10-20
+
 ### Added
 - GitHub Actions release workflow with multi-platform support
   - Linux x86_64 (musl, static binaries)
@@ -22,8 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Package manager cache updates now run automatically before installations
-
-## [2.0.0] - 2025-01-XX
 
 ### Added
 - Sync-based architecture with flexible package configuration
@@ -57,6 +64,7 @@ To create a new release:
 5. GitHub Actions will automatically build and create a draft release
 6. Review and publish the draft release on GitHub
 
-[Unreleased]: https://github.com/jkaraskiewicz/devstrap/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/jkaraskiewicz/devstrap/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/jkaraskiewicz/devstrap/releases/tag/v2.0.1
 [2.0.0]: https://github.com/jkaraskiewicz/devstrap/releases/tag/v2.0.0
 [1.0.0]: https://github.com/jkaraskiewicz/devstrap/releases/tag/v1.0.0
