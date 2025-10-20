@@ -36,7 +36,7 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Synchronize system with config (default behavior)
+    /// Synchronize system with config
     Sync {
         /// Remove packages not in config (use with caution)
         #[arg(long)]

@@ -94,26 +94,26 @@ That's it! devstrap knows how to install each package on your system.
 
 ```bash
 # List all supported packages
-./target/release/devstrap list
+devstrap list
 ```
 
 ### 4. Run devstrap
 
 ```bash
 # Preview what will be installed/changed
-./target/release/devstrap --dry-run
+devstrap sync --dry-run
 
 # Sync your system with the config
-./target/release/devstrap
+devstrap sync
 
 # Or sync with auto-confirm (for CI)
-./target/release/devstrap --yes
+devstrap sync --yes
 
 # Remove packages not in config
-./target/release/devstrap --prune
+devstrap sync --prune
 
 # Update lockfile to latest versions
-./target/release/devstrap --refresh
+devstrap sync --refresh
 ```
 
 ## 📖 Tutorial: Common Scenarios
@@ -385,8 +385,7 @@ cargo install --path .
 ### Basic Commands
 
 ```bash
-# Sync system with config (default command)
-devstrap
+# Sync system with config
 devstrap sync
 
 # Preview changes (dry-run)

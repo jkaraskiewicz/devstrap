@@ -25,8 +25,8 @@ fn main() {
             sync::run_sync(&cli, *prune, *refresh);
         }
         None => {
-            // Default behavior: sync
-            sync::run_sync(&cli, false, false);
+            // No command specified - show help
+            Cli::parse_from(&["devstrap", "--help"]);
         }
     }
 }
