@@ -324,7 +324,41 @@ This ensures everyone gets the same package versions!
 
 ## 🔧 Installation
 
-### Option 1: Build from Source
+### Option 1: Download Pre-Built Binary (Recommended)
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/jkaraskiewicz/devstrap/releases):
+
+**macOS (Apple Silicon - M1/M2/M3):**
+```bash
+curl -LO https://github.com/jkaraskiewicz/devstrap/releases/latest/download/devstrap-v2.0.0-aarch64-apple-darwin.tar.gz
+tar xzf devstrap-v2.0.0-aarch64-apple-darwin.tar.gz
+sudo mv devstrap-v2.0.0-aarch64-apple-darwin/devstrap /usr/local/bin/
+```
+
+**macOS (Intel):**
+```bash
+curl -LO https://github.com/jkaraskiewicz/devstrap/releases/latest/download/devstrap-v2.0.0-x86_64-apple-darwin.tar.gz
+tar xzf devstrap-v2.0.0-x86_64-apple-darwin.tar.gz
+sudo mv devstrap-v2.0.0-x86_64-apple-darwin/devstrap /usr/local/bin/
+```
+
+**Linux (x86_64):**
+```bash
+curl -LO https://github.com/jkaraskiewicz/devstrap/releases/latest/download/devstrap-v2.0.0-x86_64-unknown-linux-musl.tar.gz
+tar xzf devstrap-v2.0.0-x86_64-unknown-linux-musl.tar.gz
+sudo mv devstrap-v2.0.0-x86_64-unknown-linux-musl/devstrap /usr/local/bin/
+```
+
+**Windows (x86_64):**
+
+Download the `.zip` file from [releases](https://github.com/jkaraskiewicz/devstrap/releases), extract it, and add `devstrap.exe` to your PATH.
+
+**Verify installation:**
+```bash
+devstrap --version
+```
+
+### Option 2: Build from Source
 
 ```bash
 # Clone and build
@@ -340,7 +374,7 @@ cp target/release/devstrap ~/.local/bin/
 sudo cp target/release/devstrap /usr/local/bin/
 ```
 
-### Option 2: Install with Cargo
+### Option 3: Install with Cargo
 
 ```bash
 cargo install --path .

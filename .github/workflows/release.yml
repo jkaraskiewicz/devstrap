@@ -1,0 +1,215 @@
+name: Release
+
+# Trigger on version tags (e.g., v1.0.0, v2.1.3)
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+# Required for creating releases
+permissions:
+  contents: write
+
+jobs:
+  # Create the GitHub release first
+  create-release:
+    name: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get release version from tag
+        run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Show version
+        run: echo "version is $VERSION"
+
+      - name: Verify tag matches Cargo.toml version
+        shell: bash
+        run: |
+          # Extract version from tag (strip 'v' prefix)
+          tag_version="${VERSION#v}"
+          if ! grep -q "version = \"$tag_version\"" Cargo.toml; then
+            echo "ERROR: Tag version ($tag_version) does not match Cargo.toml"
+            exit 1
+          fi
+
+      - name: Create GitHub release (draft)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create $VERSION \
+            --draft \
+            --verify-tag \
+            --title $VERSION \
+            --notes "Release $VERSION
+
+          ## Installation
+
+          Download the appropriate archive for your platform below, extract it, and place the \`devstrap\` binary in your PATH.
+
+          ### Quick Install (macOS/Linux)
+          \`\`\`bash
+          # macOS Apple Silicon (M1/M2/M3)
+          curl -LO https://github.com/${{ github.repository }}/releases/download/$VERSION/devstrap-$VERSION-aarch64-apple-darwin.tar.gz
+          tar xzf devstrap-$VERSION-aarch64-apple-darwin.tar.gz
+          sudo mv devstrap-$VERSION-aarch64-apple-darwin/devstrap /usr/local/bin/
+
+          # macOS Intel
+          curl -LO https://github.com/${{ github.repository }}/releases/download/$VERSION/devstrap-$VERSION-x86_64-apple-darwin.tar.gz
+          tar xzf devstrap-$VERSION-x86_64-apple-darwin.tar.gz
+          sudo mv devstrap-$VERSION-x86_64-apple-darwin/devstrap /usr/local/bin/
+
+          # Linux x86_64
+          curl -LO https://github.com/${{ github.repository }}/releases/download/$VERSION/devstrap-$VERSION-x86_64-unknown-linux-musl.tar.gz
+          tar xzf devstrap-$VERSION-x86_64-unknown-linux-musl.tar.gz
+          sudo mv devstrap-$VERSION-x86_64-unknown-linux-musl/devstrap /usr/local/bin/
+          \`\`\`
+
+          ### Windows
+          Download the \`.zip\` file, extract it, and add the \`devstrap.exe\` to your PATH.
+
+          ## Checksums
+          SHA256 checksums are provided for verification (\`.sha256\` files).
+
+          ## Changes
+          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/$VERSION/CHANGELOG.md) for details."
+
+    outputs:
+      version: ${{ env.VERSION }}
+
+  # Build binaries for all platforms
+  build-release:
+    name: build-release
+    needs: ['create-release']
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO: cargo
+      TARGET_FLAGS: ""
+      TARGET_DIR: ./target
+      CROSS_VERSION: v0.2.5
+      RUST_BACKTRACE: 1
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64 (musl for static linking, maximum portability)
+          - build: linux-x64
+            os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-musl
+
+          # macOS Apple Silicon (M1/M2/M3)
+          - build: macos-arm
+            os: macos-latest
+            rust: stable
+            target: aarch64-apple-darwin
+
+          # macOS Intel
+          - build: macos-x64
+            os: macos-latest
+            rust: stable
+            target: x86_64-apple-darwin
+
+          # Windows x86_64
+          - build: windows-x64
+            os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+
+      - name: Install musl tools (Linux)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: Set target variables
+        shell: bash
+        run: |
+          echo "TARGET_FLAGS=--target ${{ matrix.target }}" >> $GITHUB_ENV
+          echo "TARGET_DIR=./target/${{ matrix.target }}" >> $GITHUB_ENV
+
+      - name: Show build info
+        shell: bash
+        run: |
+          echo "Building for target: ${{ matrix.target }}"
+          rustc --version
+          cargo --version
+
+      - name: Build release binary
+        shell: bash
+        run: |
+          cargo build --release --locked ${{ env.TARGET_FLAGS }}
+
+      - name: Determine binary path
+        shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" == windows-* ]]; then
+            echo "BIN_PATH=target/${{ matrix.target }}/release/devstrap.exe" >> $GITHUB_ENV
+            echo "BIN_NAME=devstrap.exe" >> $GITHUB_ENV
+          else
+            echo "BIN_PATH=target/${{ matrix.target }}/release/devstrap" >> $GITHUB_ENV
+            echo "BIN_NAME=devstrap" >> $GITHUB_ENV
+          fi
+
+      - name: Strip binary (macOS)
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: strip "$BIN_PATH"
+
+      - name: Strip binary (Linux)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        shell: bash
+        run: strip "$BIN_PATH"
+
+      - name: Create archive name
+        shell: bash
+        run: |
+          version="${{ needs.create-release.outputs.version }}"
+          echo "ARCHIVE_NAME=devstrap-$version-${{ matrix.target }}" >> $GITHUB_ENV
+
+      - name: Create archive directory
+        shell: bash
+        run: |
+          mkdir -p "$ARCHIVE_NAME"
+          cp "$BIN_PATH" "$ARCHIVE_NAME/"
+          cp README.md "$ARCHIVE_NAME/" 2>/dev/null || echo "README.md not found, skipping"
+          cp LICENSE "$ARCHIVE_NAME/" 2>/dev/null || echo "LICENSE not found, skipping"
+          cp CHANGELOG.md "$ARCHIVE_NAME/" 2>/dev/null || echo "CHANGELOG.md not found, skipping"
+
+      - name: Build archive (Windows)
+        if: startsWith(matrix.os, 'windows')
+        shell: bash
+        run: |
+          7z a "$ARCHIVE_NAME.zip" "$ARCHIVE_NAME"
+          certutil -hashfile "$ARCHIVE_NAME.zip" SHA256 > "$ARCHIVE_NAME.zip.sha256"
+          echo "ASSET=$ARCHIVE_NAME.zip" >> $GITHUB_ENV
+          echo "ASSET_SUM=$ARCHIVE_NAME.zip.sha256" >> $GITHUB_ENV
+
+      - name: Build archive (Unix)
+        if: ${{ !startsWith(matrix.os, 'windows') }}
+        shell: bash
+        run: |
+          tar czf "$ARCHIVE_NAME.tar.gz" "$ARCHIVE_NAME"
+          shasum -a 256 "$ARCHIVE_NAME.tar.gz" > "$ARCHIVE_NAME.tar.gz.sha256"
+          echo "ASSET=$ARCHIVE_NAME.tar.gz" >> $GITHUB_ENV
+          echo "ASSET_SUM=$ARCHIVE_NAME.tar.gz.sha256" >> $GITHUB_ENV
+
+      - name: Upload release archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          version="${{ needs.create-release.outputs.version }}"
+          gh release upload "$version" "$ASSET" "$ASSET_SUM"
